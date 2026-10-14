@@ -6,16 +6,32 @@ import os
 import secrets
 
 COURSES = {
-    "CS101": {"title": "Data Structures", "seats": 3, "fee": 500.0, "is_closed": False},
-    "CS202": {"title": "Operating Systems", "seats": 0, "fee": 550.0, "is_closed": True},
-    "CS303": {"title": "Compiler Design", "seats": 4, "fee": 600.0, "is_closed": False},
+    "CS101": {
+        "title": "Data Structures",
+        "seats": 3,
+        "fee": 500.0,
+        "is_closed": False,
+    },
+    "CS202": {
+        "title": "Operating Systems",
+        "seats": 0,
+        "fee": 550.0,
+        "is_closed": True,
+    },
+    "CS303": {
+        "title": "Compiler Design",
+        "seats": 4,
+        "fee": 600.0,
+        "is_closed": False,
+    },
 }
 
 TUITION_LEDGER = {"total": 0.0}
 AUDIT_LOG = []
 
 
-def enroll_student(course_id, student_name, credits_registered=3, audit_trail=None):
+def enroll_student(course_id, student_name, credits_registered=3,
+                   audit_trail=None):
     """Enroll a student in a course; return True on success."""
     if audit_trail is None:
         audit_trail = AUDIT_LOG
@@ -91,6 +107,7 @@ def main():
     export_course_roster()
     print("Open courses:", get_open_courses_summary(COURSES))
     print("Registrar token configured:", bool(registrar_auth_token))
+
 
 if __name__ == "__main__":
     main()
