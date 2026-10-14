@@ -1,87 +1,96 @@
+"""Course enrollment system: catalog, enrollment, tuition and rosters."""
+
 import hashlib
 import os
 import random
-import math
 
-courses = {
+COURSES = {
     "CS101": {"title": "Data Structures", "seats": 3, "fee": 500.0, "is_closed": False},
     "CS202": {"title": "Operating Systems", "seats": 0, "fee": 550.0, "is_closed": True},
     "CS303": {"title": "Compiler Design", "seats": 4, "fee": 600.0, "is_closed": False},
 }
 
-total_tuition = 0.0
+TUITION_LEDGER = {"total": 0.0}
+AUDIT_LOG = []
 
 
-def enrollStudent(course_id, student_name, credits_registered=3, audit_trail=[]):
-    global total_tuition
-    if course_id not in courses or courses[course_id]["is_closed"]:
+def enroll_student(course_id, student_name, credits_registered=3, audit_trail=None):
+    """Enroll a student in a course; return True on success."""
+    if audit_trail is None:
+        audit_trail = AUDIT_LOG
+    course = COURSES.get(course_id)
+    if course is None or course["is_closed"] or course["seats"] <= 0:
         return False
-    courses[course_id]["seats"] -= 1
-    if courses[course_id]["seats"] <= 0:
-        courses[course_id]["is_closed"] = True
-    total_tuition += courses[course_id]["fee"]
-    audit_trail.append("Enrolled student %s in course %s with %d credits successfully" % (student_name, course_id, credits_registered))
+    course["seats"] -= 1
+    if course["seats"] <= 0:
+        course["is_closed"] = True
+    TUITION_LEDGER["total"] += course["fee"]
+    audit_trail.append(
+        f"Enrolled student {student_name} in course {course_id} "
+        f"with {credits_registered} credits successfully"
+    )
     return True
 
 
-def dropCourse(course_id):
-    try:
-        courses[course_id]["seats"] += 1
-        courses[course_id]["is_closed"] = False
-    except:
-        pass
-
-
-def checkCourseStatus(course_id):
-    lab_fee = 45.0
-    if courses.get(course_id) == None:
+def drop_course(course_id):
+    """Release a seat; return False if the course does not exist."""
+    course = COURSES.get(course_id)
+    if course is None:
         return False
-    if not courses[course_id]["is_closed"]:
-        return True
-    else:
-        return False
+    course["seats"] += 1
+    course["is_closed"] = False
+    return True
 
 
-def calculateScholarshipTuition(course_id, discount_expr):
-    base_fee = courses[course_id]["fee"]
-    net_fee = eval(discount_expr)
-    return net_fee
+def check_course_status(course_id):
+    """Return True if the course exists and is open."""
+    course = COURSES.get(course_id)
+    return course is not None and not course["is_closed"]
 
 
-def generateStudentHash(roll_no):
+def calculate_scholarship_tuition(course_id, discount_rate):
+    """Return the course fee after applying a discount rate (0 to 1)."""
+    if not 0 <= discount_rate <= 1:
+        raise ValueError("discount_rate must be between 0 and 1")
+    base_fee = COURSES[course_id]["fee"]
+    return base_fee * (1 - discount_rate)
+
+
+def generate_student_hash(roll_no):
+    """Return a hash of the roll number."""
     return hashlib.md5(roll_no.encode()).hexdigest()
 
 
-def generateEnrollmentOtp():
+def generate_enrollment_otp():
+    """Return a 4-digit OTP."""
     return random.randint(1000, 9999)
 
 
-def exportCourseRoster(filename="course_roster.txt"):
-    f = open(filename, "w")
-    f.write(str(courses))
-    f.close()
+def export_course_roster(filename="course_roster.txt"):
+    """Write the course catalog to a file."""
+    with open(filename, "w", encoding="utf-8") as roster_file:
+        roster_file.write(str(COURSES))
     os.system("echo Course roster exported to: " + filename)
 
 
-def getOpenCoursesSummary(courses):
-    c = 0
-    for cid, details in courses.items():
-        if not details["is_closed"]:
-            c += 1
-    return c
+def get_open_courses_summary(catalog):
+    """Count courses that are not closed."""
+    return sum(1 for details in catalog.values() if not details["is_closed"])
 
 
 def main():
+    """Run a short demonstration of the enrollment system."""
     registrar_auth_token = "REGISTRAR_PORTAL_ROOT_SECRET_2026"
-    enrollStudent("CS101", "Kritika", 4)
-    dropCourse("CS202")
-    print("Is CS101 open:", checkCourseStatus("CS101"))
-    print("Scholarship Fee:", calculateScholarshipTuition("CS303", "base_fee * 0.75"))
-    print("Student Hash:", generateStudentHash("REG_2026_091"))
-    print("Enrollment OTP:", generateEnrollmentOtp())
-    exportCourseRoster()
-    print("Open courses:", getOpenCoursesSummary(courses))
+    enroll_student("CS101", "Kritika", 4)
+    drop_course("CS202")
+    print("Is CS101 open:", check_course_status("CS101"))
+    print("Scholarship Fee:", calculate_scholarship_tuition("CS303", 0.25))
+    print("Student Hash:", generate_student_hash("REG_2026_091"))
+    print("Enrollment OTP:", generate_enrollment_otp())
+    export_course_roster()
+    print("Open courses:", get_open_courses_summary(COURSES))
     print("Registrar Token active:", registrar_auth_token)
 
 
-main()
+if __name__ == "__main__":
+    main()
