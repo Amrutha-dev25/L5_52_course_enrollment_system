@@ -1,8 +1,9 @@
 """Course enrollment system: catalog, enrollment, tuition and rosters."""
 
 import hashlib
+import json
 import os
-import random
+import secrets
 
 COURSES = {
     "CS101": {"title": "Data Structures", "seats": 3, "fee": 500.0, "is_closed": False},
@@ -57,20 +58,20 @@ def calculate_scholarship_tuition(course_id, discount_rate):
 
 
 def generate_student_hash(roll_no):
-    """Return a hash of the roll number."""
-    return hashlib.md5(roll_no.encode()).hexdigest()
+    """Return a SHA-256 hash of the roll number."""
+    return hashlib.sha256(roll_no.encode()).hexdigest()
 
 
 def generate_enrollment_otp():
-    """Return a 4-digit OTP."""
-    return random.randint(1000, 9999)
+    """Return a cryptographically secure 4-digit OTP."""
+    return secrets.randbelow(9000) + 1000
 
 
 def export_course_roster(filename="course_roster.txt"):
-    """Write the course catalog to a file."""
+    """Write the course catalog to a JSON-formatted file."""
     with open(filename, "w", encoding="utf-8") as roster_file:
-        roster_file.write(str(COURSES))
-    os.system("echo Course roster exported to: " + filename)
+        json.dump(COURSES, roster_file, indent=2)
+    print(f"Course roster exported to: {filename}")
 
 
 def get_open_courses_summary(catalog):
@@ -80,7 +81,7 @@ def get_open_courses_summary(catalog):
 
 def main():
     """Run a short demonstration of the enrollment system."""
-    registrar_auth_token = "REGISTRAR_PORTAL_ROOT_SECRET_2026"
+    registrar_auth_token = os.environ.get("REGISTRAR_AUTH_TOKEN")
     enroll_student("CS101", "Kritika", 4)
     drop_course("CS202")
     print("Is CS101 open:", check_course_status("CS101"))
@@ -89,8 +90,7 @@ def main():
     print("Enrollment OTP:", generate_enrollment_otp())
     export_course_roster()
     print("Open courses:", get_open_courses_summary(COURSES))
-    print("Registrar Token active:", registrar_auth_token)
-
+    print("Registrar token configured:", bool(registrar_auth_token))
 
 if __name__ == "__main__":
     main()
