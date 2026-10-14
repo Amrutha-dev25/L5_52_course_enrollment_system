@@ -1,30 +1,9 @@
-# Reflection
-
-1. What is static code analysis?
-
-It examines source code without running it to find bugs, security
-vulnerabilities, and style problems early.
-
-
-2. How do Pylint, Bandit, and Flake8 differ?
-
-Pylint checks code quality and logic issues, Bandit checks security
-vulnerabilities, and Flake8 enforces PEP 8 style. Some issues overlap,
-for example the bare `except` was flagged by all three.
-
-
-3. Why fix issues by severity?
-
-High-severity security issues such as `os.system` and MD5 can be exploited,
-so they matter more than formatting. Fixing them first reduces real risk.
-
-
-4. How did you verify the fixes?
-
-I reran all three tools after each stage, compared the before and after
-reports, and ran the program again to confirm the output was unchanged
-apart from the intended hash and token changes.
-
+Score progression: Pylint went 4.00, then 9.45, then 9.82, then 10.00. The last two steps came from the missing newline and then the mixed line endings.
+Why you need all three tools: Pylint reached 10/10 while Bandit still reported security issues.
+Overlap between tools: the bare except was caught by all three tools, eval by Pylint and Bandit, and unused variables by Pylint and Flake8.
+Surprises: Notepad doesn’t add a final newline, and a PowerShell rewrite introduced mixed line endings that Pylint flagged.
+Judgement calls: Bandit flags MD5 whatever it’s used for, but here the hash is an identifier. You still switched, and you can say SHA-256 alone doesn’t make a roll number hash safe.
+Workflow: pre-commit hooks or CI that run all three tools before code is merged.
 
 **What surprised me**
 
